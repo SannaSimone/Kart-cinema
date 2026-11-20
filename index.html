@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171717">
+<title>Kart Cinema</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#171717;background:#f2f2ef}
+*{box-sizing:border-box}
+body{margin:0;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{position:sticky;top:0;z-index:3;background:#171717;color:#fff;padding:16px}
+h1{font-size:20px;margin:0;font-weight:850}.sub{font-size:12px;color:#c9c9c9;margin-top:4px}
+main{max-width:760px;margin:auto;padding:14px}
+.section{font-size:12px;font-weight:850;letter-spacing:.7px;color:#666;margin:5px 2px 10px}
+#search{width:100%;padding:13px 14px;border:1px solid #ddd;border-radius:12px;font-size:16px;background:white;margin-bottom:12px;outline:none}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{aspect-ratio:1/0.83;min-height:125px;border:1px solid #e0e0dc;border-radius:15px;background:#fff;padding:13px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;color:#171717;box-shadow:0 1px 2px #00000008;touch-action:manipulation}
+.tile:active{background:#e9e9e5;transform:scale(.985)}
+.tile.selected{border:2px solid #171717;padding:12px;background:#fdfdf9}
+.name{font-size:clamp(14px,3.8vw,17px);font-weight:850;line-height:1.17;overflow-wrap:anywhere}
+.tilebottom{display:flex;align-items:end;justify-content:space-between;gap:6px}
+.price{font-size:19px;font-weight:900;white-space:nowrap}
+.qtybadge{background:#171717;color:white;border-radius:99px;min-width:29px;height:29px;padding:0 8px;display:flex;align-items:center;justify-content:center;font-weight:850;font-size:13px}
+.hint{font-size:11px;color:#777}
+.panel{background:#fff;border:1px solid #e2e2de;border-radius:16px;padding:14px;margin-top:18px}
+.panelhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+h2{font-size:17px;margin:0}
+button{font-family:inherit;cursor:pointer}
+.minor{border:0;border-radius:9px;background:#eee;padding:9px 11px;font-weight:750}
+.empty{color:#777;font-size:14px;padding:10px 0}
+.cartrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid #eee}
+.cartname{font-weight:800;font-size:14px}.detail{font-size:12px;color:#777;margin-top:3px}
+.cartcontrols{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.qtybtn{width:34px;height:34px;border:1px solid #ddd;border-radius:9px;background:#fafafa;font-size:21px}
+.qty{font-weight:850;min-width:15px;text-align:center}
+.lineprice{font-weight:850;font-size:14px;min-width:62px;text-align:right}
+.totalrow{display:flex;align-items:center;justify-content:space-between;padding-top:14px}
+.totalrow span{font-size:13px;font-weight:850}.total{font-size:28px;font-weight:950}
+.cashbox{border-top:1px solid #eee;margin-top:14px;padding-top:13px}
+label{display:block;font-size:13px;font-weight:750;margin-bottom:7px}
+#cash{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size:18px}
+.change{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-weight:850}
+#change{font-size:22px;color:#167a45}
+.actions{display:grid;grid-template-columns:1fr 1.4fr;gap:9px;margin-top:14px}
+.action{padding:14px 8px;border:0;border-radius:11px;font-weight:850;font-size:14px}
+.clear{background:#eee}.next{background:#171717;color:white}
+.note{font-size:11px;line-height:1.45;color:#777;margin:12px 2px}
+@media(min-width:560px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.tile{min-height:150px}}
+</style>
+</head>
+<body>
+<header><h1>KART CINEMA</h1><div class="sub">Tocca i prodotti per aggiungerli all'ordine</div></header>
+<main>
+<div class="section">PRODOTTI</div>
+<input id="search" type="search" placeholder="Cerca un prodotto…" autocomplete="off">
+<div id="grid" class="grid"></div>
+<section class="panel" aria-live="polite">
+ <div class="panelhead"><h2>Ordine</h2><button class="minor" id="emptyTop">Svuota</button></div>
+ <div id="cart"><div class="empty">Nessun prodotto selezionato.</div></div>
+ <div class="totalrow"><span>TOTALE</span><strong id="total" class="total">0,00 €</strong></div>
+ <div class="cashbox">
+  <label for="cash">Soldi ricevuti dal cliente (€)</label>
+  <input id="cash" inputmode="decimal" type="text" placeholder="Es. 20,00">
+  <div class="change"><span id="changeLabel">Resto</span><strong id="change">—</strong></div>
+ </div>
+ <div class="actions"><button class="action clear" id="clear">Azzera ordine</button><button class="action next" id="next">Nuovo cliente</button></div>
+</section>
+<p class="note">Listino inserito dalla fotografia fornita. I prodotti oscurati non sono stati inseriti.</p>
+</main>
+<script>
+(function(){
+const products=[["Popcorn 190 gr",560],["Popcorn dolce 190 gr",660],["Chipz 120 gr",560],["Fingerz 160 gr",560],["Lays",390],["Tuc",350],["Mikado",350],["Milka Mini Cookies",350],["Skittles",410],["Pop Cioccolato",390],["M&M's",490],["Acqua",260],["Bibita PET",400],["Monster",340],["Maltesers",490],["Noberasco",450],["Salamini",350],["Chupa Chups",120]];
+const qty=Array(products.length).fill(0);
+const $=id=>document.getElementById(id);
+const money=c=>(c/100).toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+function totalCents(){return qty.reduce((s,n,i)=>s+n*products[i][1],0)}
+function renderTiles(){
+ const term=$("search").value.trim().toLocaleLowerCase("it");
+ const grid=$("grid");grid.replaceChildren();
+ products.forEach(([name,price],i)=>{
+  if(term && !name.toLocaleLowerCase("it").includes(term))return;
+  const b=document.createElement("button");b.type="button";b.className="tile"+(qty[i]?" selected":"");
+  const nm=document.createElement("span");nm.className="name";nm.textContent=name;
+  const bottom=document.createElement("span");bottom.className="tilebottom";
+  const p=document.createElement("strong");p.className="price";p.textContent=money(price);
+  bottom.appendChild(p);
+  if(qty[i]){const badge=document.createElement("span");badge.className="qtybadge";badge.textContent="×"+qty[i];bottom.appendChild(badge)}
+  else{const hint=document.createElement("span");hint.className="hint";hint.textContent="AGGIUNGI";bottom.appendChild(hint)}
+  b.append(nm,bottom);b.addEventListener("click",()=>{qty[i]++;render()});grid.appendChild(b);
+ });
+ if(!grid.children.length){const msg=document.createElement("div");msg.className="empty";msg.textContent="Nessun prodotto trovato.";grid.appendChild(msg)}
+}
+function renderCart(){
+ const cart=$("cart");cart.replaceChildren();
+ let any=false;
+ products.forEach(([name,price],i)=>{
+  if(!qty[i])return;any=true;
+  const row=document.createElement("div");row.className="cartrow";
+  const info=document.createElement("div"),nm=document.createElement("div"),detail=document.createElement("div");
+  nm.className="cartname";nm.textContent=name;detail.className="detail";detail.textContent=money(price)+" × "+qty[i];info.append(nm,detail);
+  const controls=document.createElement("div");controls.className="cartcontrols";
+  const minus=document.createElement("button");minus.className="qtybtn";minus.textContent="−";minus.setAttribute("aria-label","Togli un "+name);minus.onclick=()=>{qty[i]=Math.max(0,qty[i]-1);render()};
+  const n=document.createElement("span");n.className="qty";n.textContent=qty[i];
+  const plus=document.createElement("button");plus.className="qtybtn";plus.textContent="+";plus.setAttribute("aria-label","Aggiungi un "+name);plus.onclick=()=>{qty[i]++;render()};
+  const line=document.createElement("strong");line.className="lineprice";line.textContent=money(price*qty[i]);
+  controls.append(minus,n,plus,line);row.append(info,controls);cart.appendChild(row);
+ });
+ if(!any){const e=document.createElement("div");e.className="empty";e.textContent="Nessun prodotto selezionato.";cart.appendChild(e)}
+ $("total").textContent=money(totalCents());updateChange();
+}
+function parseCash(){
+ let v=$("cash").value.trim().replace(/\s/g,"");
+ if(!v)return null;
+ if(v.includes(",")&&v.includes("."))v=v.replace(/\./g,"").replace(",",".");
+ else v=v.replace(",",".");
+ const n=Number(v);return Number.isFinite(n)&&n>=0?Math.round(n*100):null;
+}
+function updateChange(){
+ const paid=parseCash(),due=totalCents(),out=$("change");
+ if(paid===null){$("changeLabel").textContent="Resto";out.textContent="—";out.style.color="#167a45";return}
+ const delta=paid-due;
+ if(delta<0){$("changeLabel").textContent="Mancano";out.textContent=money(-delta);out.style.color="#a65b00"}
+ else{$("changeLabel").textContent="Resto";out.textContent=money(delta);out.style.color="#167a45"}
+}
+function render(){renderTiles();renderCart()}
+function reset(){qty.fill(0);$("cash").value="";render()}
+$("search").addEventListener("input",renderTiles);
+$("cash").addEventListener("input",updateChange);
+$("clear").addEventListener("click",reset);$("emptyTop").addEventListener("click",reset);$("next").addEventListener("click",reset);
+render();
+})();
+</script>
+</body>
+</html>
